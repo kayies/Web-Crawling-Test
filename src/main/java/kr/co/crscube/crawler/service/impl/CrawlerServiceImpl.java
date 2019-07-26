@@ -1,12 +1,15 @@
 package kr.co.crscube.crawler.service.impl;
 
 import kr.co.crscube.crawler.model.CrawlerDataModel;
+import kr.co.crscube.crawler.model.PaginationModel;
+import kr.co.crscube.crawler.model.Site;
 import kr.co.crscube.crawler.service.CrawlerService;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
 import java.util.*;
@@ -19,56 +22,64 @@ import java.util.*;
 public class CrawlerServiceImpl implements CrawlerService {
 
     @Override
-    public List<CrawlerDataModel> getSNULabData() {
+    public List<CrawlerDataModel> getSNULabData(Integer pageNo) throws Exception {
 
         List<CrawlerDataModel> dataList = new ArrayList<>();
 
         // 서울대
+        pageNo = (pageNo == null) ? 1 : pageNo;
+
+        String snuUrl = String.format(Site.SNU.getUrl(), pageNo);
+        Document SNUDoc = null;
         try {
-            int pageNo = 1;
-            boolean pageYn = true;
+            SNUDoc = Jsoup.connect(snuUrl).get();
+        } catch (IOException e) {
+            throw new Exception();
+        }
 
-            while (pageYn) {
-                String snuUrl = "http://snuhlab.org/checkup/check_list.aspx?page="+ pageNo + "&ins_class_code=L20&searchfield=TOTAL&searchword=";
-                Document SNUDoc = Jsoup.connect(snuUrl).get();
+        Elements labelElements = SNUDoc.select("div.jw_bh li.fix strong");
+        Elements rangeElements = SNUDoc.select("div.jw_bh li.fix");
+        Elements unitElements = SNUDoc.select("div.jw_bh li.fix");
 
-                Elements labelElements = SNUDoc.select("div.jw_bh li.fix strong");
-                Elements rangeElements = SNUDoc.select("div.jw_bh li.fix");
-                Elements unitElements = SNUDoc.select("div.jw_bh li.fix");
-                Elements noDataElements = SNUDoc.select("#empty_li");
-                String noDataMsg = noDataElements.text();
+        for (Element element : labelElements) {
 
-                if(!noDataMsg.equals("") &&  noDataMsg != null) {
-                    pageYn = false;
-                    break;
-                }
+        }
 
-                for(int i = 0 ; i < labelElements.size(); i++) {
+        if (!CollectionUtils.isEmpty(labelElements)) {
 
-                    CrawlerDataModel crawlerDataModel = new CrawlerDataModel();
+        }
 
-                    String label = labelElements.eq(i).text();
-                    String range = rangeElements.eq(i).select("tr td").eq(4).text();
+        labelElements.stream().forEach(element -> {
 
-                    if(range.contains("성인")) {
-                        range = range.substring(8, range.indexOf("소아"));
-                    }
+        });
 
-                    String unit = unitElements.eq(i).select("tr td").eq(5).text();
+        for(Element element : labelElements) {
 
-                    crawlerDataModel.setLabel(label);
-                    crawlerDataModel.setRange(range);
-                    crawlerDataModel.setUnit(unit);
+        }
 
-                    dataList.add(crawlerDataModel);
-                }
 
-                pageNo++;
+        for(int i = 0 ; i < labelElements.size(); i++) {
+
+
+
+            CrawlerDataModel crawlerDataModel = new CrawlerDataModel();
+
+            String label = labelElements.eq(i).text();
+            String range = rangeElements.eq(i).select("tr td").eq(4).text();
+
+            if(range.contains("성인")) {
+                range = range.substring(8, range.indexOf("소아"));
             }
 
-        } catch (IOException e) {
-            e.printStackTrace();
+            String unit = unitElements.eq(i).select("tr td").eq(5).text();
+
+            crawlerDataModel.setLabel(label);
+            crawlerDataModel.setRange(range);
+            crawlerDataModel.setUnit(unit);
+
+            dataList.add(crawlerDataModel);
         }
+
         return dataList;
     }
 
@@ -120,7 +131,8 @@ public class CrawlerServiceImpl implements CrawlerService {
             int pageNo = 1;
             boolean pageYn = true;
 
-            /*while(pageYn) {*/
+            while(pageYn) {
+
 
                 Map<String, String> postData = new HashMap<>();
                 postData.put("currentPage", pageNo+"");
@@ -133,10 +145,10 @@ public class CrawlerServiceImpl implements CrawlerService {
                 Elements labelElements = doc.select("table.type1 tbody tr");
                 String noDataMsg = labelElements.select("p").text();
 
-               /* if(!noDataMsg.equals("") &&  noDataMsg != null) {
+                if(!noDataMsg.equals("") &&  noDataMsg != null) {
                     pageYn = false;
                     break;
-                }*/
+                }
 
                for (int i = 0 ; i < labelElements.size(); i++ ) {
 
@@ -155,8 +167,8 @@ public class CrawlerServiceImpl implements CrawlerService {
 
                     dataList.add(crawlerDataModel);
                 }
-               /* pageNo++;
-            }*/
+                pageNo++;
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -182,5 +194,63 @@ public class CrawlerServiceImpl implements CrawlerService {
             e.printStackTrace();
         }
         return rangeAndUnit;
+    }
+
+
+
+    private String getTotalSize(String url) {
+
+        String str = "";
+        int totalSize = 0;
+        try {
+            Document document = Jsoup.connect(url).get();
+
+            // GCU <a href="javascript:goPage(276);" class="last"><span>마지막</span></a>
+            Elements lastPageBtn = document.select("a.last");
+
+            if( lastPageBtn == null ) {
+
+            }
+
+            str = lastPageBtn.text();
+
+
+
+
+        } catch (IOException e) {
+
+            e.printStackTrace();
+        }
+
+        return str;
+    }
+
+
+    @Override
+    public ArrayList<Integer> getPageList(String type) {
+
+
+        ArrayList<Integer> page = new ArrayList<>();
+
+        switch (type) {
+            case  "SNU" :
+
+                boolean pageYn = true;
+                String url = "http://snuhlab.org/checkup/check_list.aspx?ins_class_code=L20&searchfield=TOTAL&searchword=";
+
+                try {
+
+                    Document document = Jsoup.connect(url).get();
+
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+
+
+        }
+
+        return page;
     }
 }

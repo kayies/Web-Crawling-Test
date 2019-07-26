@@ -3,6 +3,7 @@ package kr.co.crscube.crawler.service;
 
 import kr.co.crscube.crawler.model.CrawlerDataModel;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -10,7 +11,9 @@ import java.util.List;
  */
 public interface CrawlerService {
 
-    List<CrawlerDataModel> getSNULabData();
+    List<CrawlerDataModel> getSNULabData(Integer pageNo) throws Exception;
     List<CrawlerDataModel> getSAHLabData();
     List<CrawlerDataModel> getGCLabData();
+
+    ArrayList<Integer> getPageList(String type);
 }

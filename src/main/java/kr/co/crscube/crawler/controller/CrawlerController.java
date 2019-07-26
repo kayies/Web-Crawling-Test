@@ -6,14 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by crs32 on 2019-07-23.
@@ -24,10 +18,16 @@ public class CrawlerController {
 
     private final CrawlerService crawlerService;
 
-    @GetMapping(value = "/", produces = MediaType.TEXT_HTML_VALUE)
-    public String snu(Model model) {
+    @GetMapping(value = "/snu", produces = MediaType.TEXT_HTML_VALUE )
+    public String snu(Model model, @RequestParam(value = "pageNo", required = false) Integer pageNo) {
 
-        model.addAttribute("SNU", crawlerService.getSNULabData());
+
+        String type = "SNU";
+        model.addAttribute("SNU", crawlerService.getSNULabData(pageNo));
+
+        model.addAttribute("pageArr", crawlerService.getPageList(type));
+
+
 
         return "crawler/snu";
     }
@@ -48,6 +48,8 @@ public class CrawlerController {
         return "crawler/gc";
     }
 
+
+    /*
     @RequestMapping(value = "/get-snu-json", method = RequestMethod.GET)
     @ResponseBody
     public List<CrawlerDataModel> getSNUjsonData(Model model) {
@@ -68,6 +70,6 @@ public class CrawlerController {
     public List<CrawlerDataModel> getGCjsonData(Model model) {
         List<CrawlerDataModel> crawlerDataModelArrayList = crawlerService.getGCLabData();
         return crawlerDataModelArrayList;
-    }
+    }*/
 
 }
