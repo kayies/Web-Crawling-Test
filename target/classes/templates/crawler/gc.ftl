@@ -1,32 +1,31 @@
 <#import "/spring.ftl" as spring />
 <html lang="ko">
+<!-- 합쳐지고 최소화된 최신 CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+<!-- 부가적인 테마 -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">
+<!-- 합쳐지고 최소화된 최신 자바스크립트 -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 <head>
     <meta charset="utf-8">
-    <style>
-        table {
-            width: 100%;
-        }
-        table, th, td {
-            border: 1px solid #bcbcbc;
-        }
-    </style>
 </head>
 <body>
-	<form action = "">
-		<div>
-            <select id="moveSite" onchange="javascript:changeSite(this);">
-                <option value="SNU">서울대병원</option>
+    <div class="search row" style="margin: 18px">
+        <div class="col-xs-2 col-sm-2">
+            <select id="moveSite" onchange="javascript:changeSite(this);" class="form-control">
+                <option value="SNU" >서울대병원</option>
+                <option value="SAH" >서울아산병원</option>
                 <option value="GC" selected>GC Labs</option>
             </select>
-		</div>
-	</form>
-	<div>
-		<table>
+        </div>
+    </div>
+	<div class="container" style="margin: 18px">
+		<table class="table table-hover">
 			<thead>
 			<tr>
 				<th>검사항목명</th>
-				<th>참고치</th>
-				<th>단위</th>
+				<th>참고치 (단위)</th>
 			</tr>
 			</thead>
 			<tbody>
@@ -34,7 +33,6 @@
 					<tr>
 						<td>${item.label}</td>
 						<td>${item.range}</td>
-						<td><#--${item.unit}-->-</td>
 					</tr>
 				</#list>
 			</tbody>
@@ -44,21 +42,15 @@
 </html>
 
 <script type="text/javascript">
-
     function changeSite(obj) {
-
-
         var selectValue = obj.value;
-
         if(selectValue === 'SNU') {
             window.location = '/';
         }else if(selectValue === 'GC'){
             window.location = '/gc';
         }else {
-
+            window.location = '/sah'
         }
-
     }
-
 </script>
 

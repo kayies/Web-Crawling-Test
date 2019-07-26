@@ -30,13 +30,18 @@ public class CrawlerServiceImpl implements CrawlerService {
 
             while (pageYn) {
                 String snuUrl = "http://snuhlab.org/checkup/check_list.aspx?page="+ pageNo + "&ins_class_code=L20&searchfield=TOTAL&searchword=";
-                Document doc = Jsoup.connect(snuUrl).get();
+                Document SNUDoc = Jsoup.connect(snuUrl).get();
 
-                Elements labelElements = doc.select("div.jw_bh li.fix strong");
-                Elements rangeElements = doc.select("div.jw_bh li.fix");
-                Elements unitElements = doc.select("div.jw_bh li.fix");
-                Elements noDataElements = doc.select("#empty_li");
+                Elements labelElements = SNUDoc.select("div.jw_bh li.fix strong");
+                Elements rangeElements = SNUDoc.select("div.jw_bh li.fix");
+                Elements unitElements = SNUDoc.select("div.jw_bh li.fix");
+                Elements noDataElements = SNUDoc.select("#empty_li");
                 String noDataMsg = noDataElements.text();
+
+                if(!noDataMsg.equals("") &&  noDataMsg != null) {
+                    pageYn = false;
+                    break;
+                }
 
                 for(int i = 0 ; i < labelElements.size(); i++) {
 
@@ -58,9 +63,6 @@ public class CrawlerServiceImpl implements CrawlerService {
                     dataList.add(crawlerDataModel);
                 }
 
-                if(!noDataMsg.equals("") &&  noDataMsg != null) {
-                    pageYn = false;
-                }
                 pageNo++;
             }
 
@@ -71,20 +73,41 @@ public class CrawlerServiceImpl implements CrawlerService {
     }
 
     @Override
-    public String getSAHLabData() {
+    public List<CrawlerDataModel> getSAHLabData() {
 
-        String subResult1 = "";
+        List<CrawlerDataModel> dataList = new ArrayList<>();
 
         try {
             // 서울아산병원
-            Document doc2 = Jsoup.connect("http://m.amc.seoul.kr/asan/mobile/healthinfo/management/managementDetail.do?managementId=119").get();
-            Elements contents2 = doc2.select("div.cont div").eq(2);
-            subResult1 = contents2.select("p").text();
+            Document SAHDoc = Jsoup.connect("http://m.amc.seoul.kr/asan/mobile/healthinfo/management/managementMobileSubMain.do").get();
+            Elements keyElement = SAHDoc.select("li#A000013 a.ty_wrap");
+
+            for(int i=0; i<10; i++) {
+                /*for(int i=0; i<keyElement.size(); i++) {*/
+
+                CrawlerDataModel crawlerDataModel = new CrawlerDataModel();
+
+                String SAHKey = ((keyElement.eq(i)).attr("href").split("managementId=")[1]);
+
+                String detailUrl = "http://m.amc.seoul.kr/asan/mobile/healthinfo/management/managementDetail.do?managementId=" + SAHKey;
+                Document detailDoc = Jsoup.connect(detailUrl).get();
+
+                String label = detailDoc.select("div.notice_wrap p.tit").text();
+                String rangeAndUnit = detailDoc.select("div.notice_wrap div.cont div").eq(2).text();
+
+                crawlerDataModel.setLabel(label);
+                crawlerDataModel.setRange(rangeAndUnit);
+
+                dataList.add(crawlerDataModel);
+            }
+
+
+
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return subResult1;
+        return dataList;
     }
 
     @Override
@@ -97,9 +120,9 @@ public class CrawlerServiceImpl implements CrawlerService {
             int pageNo = 1;
             boolean pageYn = true;
 
-            while(pageYn) {
-                Map<String, String> postData = new HashMap<>();
+            /*while(pageYn) {*/
 
+                Map<String, String> postData = new HashMap<>();
                 postData.put("currentPage", pageNo+"");
                 postData.put("srchInitial", "");
                 postData.put("srchDetcd", "29");
@@ -110,40 +133,37 @@ public class CrawlerServiceImpl implements CrawlerService {
                 Elements labelElements = doc.select("table.type1 tbody tr");
                 String noDataMsg = labelElements.select("p").text();
 
-                if(!noDataMsg.equals("") &&  noDataMsg != null) {
+               /* if(!noDataMsg.equals("") &&  noDataMsg != null) {
                     pageYn = false;
-
                     break;
-                }
+                }*/
 
                for (int i = 0 ; i < labelElements.size(); i++ ) {
+
                     CrawlerDataModel crawlerDataModel = new CrawlerDataModel();
-
                     String label = labelElements.eq(i).select("td").eq(4).text();
-                    crawlerDataModel.setLabel(label);
 
+                    crawlerDataModel.setLabel(label);
                     String hrefValue = labelElements.eq(i).select("td").eq(4).select("a").attr("href");
+
                     String[] split = hrefValue.split("code=");
                     String testKey = split[1].substring(0, split[1].indexOf("'"));
 
                     Map<String, String> rangeAndUnit = getGCRangeAndUnit(testKey);
 
                     crawlerDataModel.setRange(rangeAndUnit.get("range"));
-                    crawlerDataModel.setUnit(rangeAndUnit.get("unit"));
 
                     dataList.add(crawlerDataModel);
                 }
-
-
-                pageNo++;
-            }
-
+               /* pageNo++;
+            }*/
 
         } catch (IOException e) {
             e.printStackTrace();
         }
         return dataList;
     }
+
 
 
     private Map<String, String> getGCRangeAndUnit(String testKey) {

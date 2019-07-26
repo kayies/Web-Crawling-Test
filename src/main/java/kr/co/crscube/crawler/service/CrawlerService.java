@@ -11,6 +11,6 @@ import java.util.List;
 public interface CrawlerService {
 
     List<CrawlerDataModel> getSNULabData();
-    String getSAHLabData();
+    List<CrawlerDataModel> getSAHLabData();
     List<CrawlerDataModel> getGCLabData();
 }
