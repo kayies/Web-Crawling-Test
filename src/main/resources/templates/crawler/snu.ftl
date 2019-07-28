@@ -43,41 +43,68 @@
 						<td>${item.range}</td>
 						<td>${item.unit}</td>
 					</tr
-				</#list>>
+				</#list>
 			</tbody>
 		</table>
-        <nav style="text-align: center;" aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
-                <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1">Previous</a>
-                </li>
-                <li class="page-item"><a class="page-link" href="#">1</a></li>
-                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item">
-                    <a class="page-link" href="#">Next</a>
-                </li>
-            </ul>
-        </nav>
+		<div id="paginationBox" style="text-align: center;">
+			<ul class="pagination" >
+				<#if pagination.prev >
+					<li class="page-item"><a class="page-link" href="#" onClick="fn_prev('${pagination.page}', '${pagination.pageRange}', '${pagination.rangeSize}')">Previous</a></li>
+				</#if>
+				<#list pagination.startPage..pagination.endPage as i>
+					<li class="page-item <#if pagination.page == i> active <#else >''</#if> ">
+					<a class="page-link" href="#" onClick="fn_pagination(${i}, ${pagination.pageRange}, ${pagination.rangeSize})"> ${i} </a>
+					</li>
+				</#list>
+				<#if pagination.next>
+					<li class="page-item"><a class="page-link" href="#" onClick="fn_next('${pagination.pageRange}',
+								'${pagination.pageRange}', '${pagination.rangeSize}')" >Next</a></li>
+				</#if>
+			</ul>
+		</div>
     </div>
-
 </body>
 </html>
 
 <script type="text/javascript">
 
-
-
 	function changeSite(obj) {
-	    var selectValue = obj.value;
-	    if(selectValue === 'SNU') {
-            window.location = '/';
-        }else if(selectValue === 'GC'){
-            window.location = '/gc';
+		var selectValue = obj.value;
+		if(selectValue === 'SNU') {
+			window.location = '/snu';
+		}else if(selectValue === 'GC'){
+			window.location = '/gc';
 		}else {
-            window.location = '/sah'
+			window.location = '/sah'
 		}
 	}
 
+	//이전 버튼 이벤트
+	function fn_prev(page, pageRange, rangeSize) {
+		var page = ((pageRange - 2) * rangeSize) + 1;
+		var range = pageRange - 1;
+		var url = "/snu";
+		url = url + "?pageNo=" + page;
+		url = url + "&range=" + range;
+		window.location = url;
+	}
+
+	//페이지 번호 클릭
+	function fn_pagination(page, pageRange, rangeSize) {
+		var url = "/snu";
+		url = url + "?pageNo=" + page;
+		url = url + "&range=" + pageRange;
+		window.location = url;
+	}
+
+	//다음 버튼 이벤트
+	function fn_next(page, pageRange, rangeSize) {
+		var page = parseInt((pageRange * rangeSize)) + 1;
+		var range = parseInt(pageRange) + 1;
+		var url = "/snu";
+		url = url + "?pageNo=" + page;
+		url = url + "&range=" + range;
+		window.location = url;
+	}
 
 </script>

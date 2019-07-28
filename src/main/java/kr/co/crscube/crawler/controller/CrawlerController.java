@@ -1,6 +1,7 @@
 package kr.co.crscube.crawler.controller;
 
 import kr.co.crscube.crawler.model.CrawlerDataModel;
+import kr.co.crscube.crawler.model.PaginationModel;
 import kr.co.crscube.crawler.service.CrawlerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -19,15 +20,18 @@ public class CrawlerController {
     private final CrawlerService crawlerService;
 
     @GetMapping(value = "/snu", produces = MediaType.TEXT_HTML_VALUE )
-    public String snu(Model model, @RequestParam(value = "pageNo", required = false) Integer pageNo) {
+    public String snu(Model model,
+                      @RequestParam(value = "pageNo", required = false, defaultValue = "1") Integer pageNo,
+                      @RequestParam(value = "range", required = false, defaultValue = "1") Integer range) throws Exception {
 
-
-        String type = "SNU";
         model.addAttribute("SNU", crawlerService.getSNULabData(pageNo));
 
-        model.addAttribute("pageArr", crawlerService.getPageList(type));
+        int listCnt = crawlerService.getSNULabData(pageNo).get(0).getListCnt();
 
+        PaginationModel paginationModel = new PaginationModel();
+        paginationModel.pageInfo(pageNo, range, listCnt);
 
+        model.addAttribute("pagination", paginationModel);
 
         return "crawler/snu";
     }

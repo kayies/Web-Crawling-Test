@@ -15,5 +15,4 @@ public interface CrawlerService {
     List<CrawlerDataModel> getSAHLabData();
     List<CrawlerDataModel> getGCLabData();
 
-    ArrayList<Integer> getPageList(String type);
 }

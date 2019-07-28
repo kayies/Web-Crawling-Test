@@ -26,61 +26,68 @@ public class CrawlerServiceImpl implements CrawlerService {
 
         List<CrawlerDataModel> dataList = new ArrayList<>();
 
-        // 서울대
-        pageNo = (pageNo == null) ? 1 : pageNo;
-
         String snuUrl = String.format(Site.SNU.getUrl(), pageNo);
         Document SNUDoc = null;
+
         try {
             SNUDoc = Jsoup.connect(snuUrl).get();
         } catch (IOException e) {
             throw new Exception();
         }
 
-        Elements labelElements = SNUDoc.select("div.jw_bh li.fix strong");
-        Elements rangeElements = SNUDoc.select("div.jw_bh li.fix");
-        Elements unitElements = SNUDoc.select("div.jw_bh li.fix");
+        Elements elements = SNUDoc.select("div.jw_bh li.fix");
+        CrawlerDataModel crawlerDataModel = null;
 
-        for (Element element : labelElements) {
+        int idx = 0;
+        for ( Element element : elements) {
+            crawlerDataModel = new CrawlerDataModel();
 
-        }
+            String label = element.select("strong").text();
 
-        if (!CollectionUtils.isEmpty(labelElements)) {
-
-        }
-
-        labelElements.stream().forEach(element -> {
-
-        });
-
-        for(Element element : labelElements) {
-
-        }
-
-
-        for(int i = 0 ; i < labelElements.size(); i++) {
-
-
-
-            CrawlerDataModel crawlerDataModel = new CrawlerDataModel();
-
-            String label = labelElements.eq(i).text();
-            String range = rangeElements.eq(i).select("tr td").eq(4).text();
-
+            String range = element.select("tr td").eq(4).text();
             if(range.contains("성인")) {
                 range = range.substring(8, range.indexOf("소아"));
             }
 
-            String unit = unitElements.eq(i).select("tr td").eq(5).text();
+            String unit = element.select("tr td").eq(5).text();
 
             crawlerDataModel.setLabel(label);
             crawlerDataModel.setRange(range);
             crawlerDataModel.setUnit(unit);
 
-            dataList.add(crawlerDataModel);
-        }
+            if(idx == 0) {
+                Elements pageArrElements = SNUDoc.select("div.paging_list li.paging_next").next("li");
+                String pageHrefAttr = pageArrElements.select("a").attr("href");
 
+                if(!"".equals(pageHrefAttr) && pageHrefAttr != null) {
+                    String lastPage = pageHrefAttr.split("page=")[1];
+                    lastPage = lastPage.substring(0, lastPage.indexOf("&ins_class_code"));
+                    crawlerDataModel.setListCnt(getSNUTotalSize(lastPage));
+                }else {
+                    String lastPage = SNUDoc.select("div.paging_list ul.fix li.li_num").size()+"";
+                    crawlerDataModel.setListCnt(getSNUTotalSize(lastPage));
+                }
+            }
+            dataList.add(crawlerDataModel);
+            idx ++;
+        }
         return dataList;
+    }
+
+    private int getSNUTotalSize(String lastPage) throws Exception {
+
+        String snuUrlForTotalSize = String.format(Site.SNU.getUrl(), lastPage);
+        Document SNUDocForTotalSize = null;
+        try {
+            SNUDocForTotalSize = Jsoup.connect(snuUrlForTotalSize).get();
+        } catch (IOException e) {
+            throw new Exception();
+        }
+        Elements currentRow = SNUDocForTotalSize.select("div.jw_bh ul li.fix");;
+        int lastPageSize = currentRow.size();
+        int totalSize = (((Integer.parseInt(lastPage) - 1) * 10)) + lastPageSize;
+
+        return totalSize;
     }
 
     @Override
@@ -112,8 +119,6 @@ public class CrawlerServiceImpl implements CrawlerService {
                 dataList.add(crawlerDataModel);
             }
 
-
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -132,8 +137,6 @@ public class CrawlerServiceImpl implements CrawlerService {
             boolean pageYn = true;
 
             while(pageYn) {
-
-
                 Map<String, String> postData = new HashMap<>();
                 postData.put("currentPage", pageNo+"");
                 postData.put("srchInitial", "");
@@ -177,7 +180,6 @@ public class CrawlerServiceImpl implements CrawlerService {
     }
 
 
-
     private Map<String, String> getGCRangeAndUnit(String testKey) {
         Map<String, String> rangeAndUnit = null;
         try {
@@ -196,61 +198,4 @@ public class CrawlerServiceImpl implements CrawlerService {
         return rangeAndUnit;
     }
 
-
-
-    private String getTotalSize(String url) {
-
-        String str = "";
-        int totalSize = 0;
-        try {
-            Document document = Jsoup.connect(url).get();
-
-            // GCU <a href="javascript:goPage(276);" class="last"><span>마지막</span></a>
-            Elements lastPageBtn = document.select("a.last");
-
-            if( lastPageBtn == null ) {
-
-            }
-
-            str = lastPageBtn.text();
-
-
-
-
-        } catch (IOException e) {
-
-            e.printStackTrace();
-        }
-
-        return str;
-    }
-
-
-    @Override
-    public ArrayList<Integer> getPageList(String type) {
-
-
-        ArrayList<Integer> page = new ArrayList<>();
-
-        switch (type) {
-            case  "SNU" :
-
-                boolean pageYn = true;
-                String url = "http://snuhlab.org/checkup/check_list.aspx?ins_class_code=L20&searchfield=TOTAL&searchword=";
-
-                try {
-
-                    Document document = Jsoup.connect(url).get();
-
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                break;
-
-
-        }
-
-        return page;
-    }
 }

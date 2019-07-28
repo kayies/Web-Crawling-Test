@@ -45,7 +45,7 @@
     function changeSite(obj) {
         var selectValue = obj.value;
         if(selectValue === 'SNU') {
-            window.location = '/';
+            window.location = '/snu';
         }else if(selectValue === 'GC'){
             window.location = '/gc';
         }else {
