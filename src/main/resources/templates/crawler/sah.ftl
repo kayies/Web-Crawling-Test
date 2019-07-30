@@ -29,7 +29,7 @@
 			<thead>
 			<tr>
 				<th>검사항목명</th>
-				<th>참고치(단위)</th>
+				<th>정상 범위 (단위)</th>
 			</tr>
 			</thead>
 			<tbody>
@@ -41,6 +41,22 @@
 				</#list>>
 			</tbody>
 		</table>
+        <div id="paginationBox" style="text-align: center;">
+            <ul class="pagination" >
+			<#if pagination.prev >
+                <li class="page-item"><a class="page-link" href="#" onClick="fn_prev('${pagination.page}', '${pagination.pageRange}', '${pagination.rangeSize}')">Previous</a></li>
+			</#if>
+			<#list pagination.startPage..pagination.endPage as i>
+                <li class="page-item <#if pagination.page == i> active <#else >''</#if> ">
+                    <a class="page-link" href="#" onClick="fn_pagination(${i}, ${pagination.pageRange}, ${pagination.rangeSize})"> ${i} </a>
+                </li>
+			</#list>
+			<#if pagination.next>
+                <li class="page-item"><a class="page-link" href="#" onClick="fn_next('${pagination.pageRange}',
+                        '${pagination.pageRange}', '${pagination.rangeSize}')" >Next</a></li>
+			</#if>
+            </ul>
+        </div>
     </div>
 </body>
 </html>
@@ -56,4 +72,32 @@
             window.location = '/sah'
 		}
 	}
+
+    //이전 버튼 이벤트
+    function fn_prev(page, pageRange, rangeSize) {
+        var page = ((pageRange - 2) * rangeSize) + 1;
+        var range = pageRange - 1;
+        var url = "/sah";
+        url = url + "?pageNo=" + page;
+        url = url + "&range=" + range;
+        window.location = url;
+    }
+
+    //페이지 번호 클릭
+    function fn_pagination(page, pageRange, rangeSize) {
+        var url = "/sah";
+        url = url + "?pageNo=" + page;
+        url = url + "&range=" + pageRange;
+        window.location = url;
+    }
+
+    //다음 버튼 이벤트
+    function fn_next(page, pageRange, rangeSize) {
+        var page = parseInt((pageRange * rangeSize)) + 1;
+        var range = parseInt(pageRange) + 1;
+        var url = "/sah";
+        url = url + "?pageNo=" + page;
+        url = url + "&range=" + range;
+        window.location = url;
+    }
 </script>

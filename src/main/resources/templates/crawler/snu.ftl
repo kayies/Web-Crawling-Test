@@ -32,7 +32,7 @@
 			<thead>
 			<tr>
 				<th>검사항목명</th>
-				<th>참고치</th>
+				<th>정상 범위</th>
 				<th>단위</th>
 			</tr>
 			</thead>

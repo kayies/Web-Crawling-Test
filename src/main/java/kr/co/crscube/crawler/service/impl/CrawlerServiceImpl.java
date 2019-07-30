@@ -13,6 +13,9 @@ import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Created by crs32 on 2019-07-24.
@@ -91,24 +94,47 @@ public class CrawlerServiceImpl implements CrawlerService {
     }
 
     @Override
-    public List<CrawlerDataModel> getSAHLabData() {
+    public List<CrawlerDataModel> getSAHLabData(Integer pageNo) throws Exception{
 
         List<CrawlerDataModel> dataList = new ArrayList<>();
 
+
+        // 서울아산병원
+        String SAHUrl = Site.SAH.getUrl();
+        Document SAHDoc = null;
         try {
-            // 서울아산병원
-            Document SAHDoc = Jsoup.connect("http://m.amc.seoul.kr/asan/mobile/healthinfo/management/managementMobileSubMain.do").get();
-            Elements keyElement = SAHDoc.select("li#A000013 a.ty_wrap");
+            SAHDoc = Jsoup.connect(SAHUrl).get();
+        } catch (IOException e) {
+            throw new Exception();
+        }
 
-            for(int i=0; i<10; i++) {
-                /*for(int i=0; i<keyElement.size(); i++) {*/
+        Elements elements = SAHDoc.select("li#A000013 a.ty_wrap");
 
+        // paging처리
+        int startPage = (pageNo - 1) * 10;
+        int endPage = pageNo * 10;
+
+        List<Element> ss = elements.stream()
+                /*.map(Element::text)*/
+                .filter(Element -> Element.text().contains("ABO"))
+                .collect(Collectors.toList());
+
+
+        for(int i = startPage; i < endPage; i++) {
+
+            // 데이터가 없을경우의 방어코드
+            if(!(elements.get(i)).equals("")) {
                 CrawlerDataModel crawlerDataModel = new CrawlerDataModel();
+                String SAHKey = (elements.get(i).attr("href").split("managementId=")[1]);
 
-                String SAHKey = ((keyElement.eq(i)).attr("href").split("managementId=")[1]);
+                String detailUrl = String.format(Site.SAH_detail.getUrl(), SAHKey);
+                Document detailDoc = null;
 
-                String detailUrl = "http://m.amc.seoul.kr/asan/mobile/healthinfo/management/managementDetail.do?managementId=" + SAHKey;
-                Document detailDoc = Jsoup.connect(detailUrl).get();
+                try {
+                    detailDoc = Jsoup.connect(detailUrl).get();
+                } catch (IOException e) {
+                    throw new Exception();
+                }
 
                 String label = detailDoc.select("div.notice_wrap p.tit").text();
                 String rangeAndUnit = detailDoc.select("div.notice_wrap div.cont div").eq(2).text();
@@ -116,86 +142,113 @@ public class CrawlerServiceImpl implements CrawlerService {
                 crawlerDataModel.setLabel(label);
                 crawlerDataModel.setRange(rangeAndUnit);
 
+                if(i == startPage) {
+                    crawlerDataModel.setListCnt(elements.size());
+                }
                 dataList.add(crawlerDataModel);
             }
-
-        } catch (IOException e) {
-            e.printStackTrace();
         }
-
         return dataList;
     }
 
     @Override
-    public List<CrawlerDataModel> getGCLabData() {
+    public List<CrawlerDataModel> getGCLabData(Integer pageNo) throws Exception {
 
         List<CrawlerDataModel> dataList = new ArrayList<>();
 
+        // GC Labs
+        Map<String, String> postData = new HashMap<>();
+        postData.put("currentPage", pageNo+"");
+        postData.put("srchInitial", "");
+        postData.put("srchDetcd", "29");
+        postData.put("srchKey", "");
+        postData.put("srchWord", "");
+
+        String gcUrl = Site.GC.getUrl();
+        Document GCDoc = null;
         try {
-            // GC Labs
-            int pageNo = 1;
-            boolean pageYn = true;
-
-            while(pageYn) {
-                Map<String, String> postData = new HashMap<>();
-                postData.put("currentPage", pageNo+"");
-                postData.put("srchInitial", "");
-                postData.put("srchDetcd", "29");
-                postData.put("srchKey", "");
-                postData.put("srchWord", "");
-
-                Document doc = Jsoup.connect("http://www.gclabs.co.kr/testingInfo/testingItem_list").data(postData).post();
-                Elements labelElements = doc.select("table.type1 tbody tr");
-                String noDataMsg = labelElements.select("p").text();
-
-                if(!noDataMsg.equals("") &&  noDataMsg != null) {
-                    pageYn = false;
-                    break;
-                }
-
-               for (int i = 0 ; i < labelElements.size(); i++ ) {
-
-                    CrawlerDataModel crawlerDataModel = new CrawlerDataModel();
-                    String label = labelElements.eq(i).select("td").eq(4).text();
-
-                    crawlerDataModel.setLabel(label);
-                    String hrefValue = labelElements.eq(i).select("td").eq(4).select("a").attr("href");
-
-                    String[] split = hrefValue.split("code=");
-                    String testKey = split[1].substring(0, split[1].indexOf("'"));
-
-                    Map<String, String> rangeAndUnit = getGCRangeAndUnit(testKey);
-
-                    crawlerDataModel.setRange(rangeAndUnit.get("range"));
-
-                    dataList.add(crawlerDataModel);
-                }
-                pageNo++;
-            }
-
+            GCDoc = Jsoup.connect(gcUrl).data(postData).post();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new Exception();
         }
+
+        Elements elements = GCDoc.select("form#frmInfo table.board tbody tr");
+
+        int idx = 0;
+        for (Element element : elements) {
+
+           CrawlerDataModel crawlerDataModel = new CrawlerDataModel();
+           String label = element.select("td").eq(4).text();
+
+           crawlerDataModel.setLabel(label);
+           String hrefValue = element.select("td").eq(4).select("a").attr("href");
+
+           String[] split = hrefValue.split("code=");
+           String testKey = split[1].substring(0, split[1].indexOf("'"));
+
+           Map<String, String> rangeAndUnit = getGCRangeAndUnit(testKey);
+
+           crawlerDataModel.setRange(rangeAndUnit.get("range"));
+
+           if( idx == 0 ) {
+               Elements pageArrElements = GCDoc.select("p.paging a.last");
+               String pageHrefAttr = pageArrElements.attr("href");
+               String lastPage = pageHrefAttr.replaceAll("[^0-9]", "");
+
+               crawlerDataModel.setListCnt(getGCTotalSize(lastPage));
+           }
+
+           dataList.add(crawlerDataModel);
+           idx++;
+        }
+
         return dataList;
     }
 
+    private int getGCTotalSize(String lastPage) throws Exception {
 
-    private Map<String, String> getGCRangeAndUnit(String testKey) {
-        Map<String, String> rangeAndUnit = null;
+        Map<String, String> postData = new HashMap<>();
+        postData.put("currentPage", lastPage+"");
+        postData.put("srchInitial", "");
+        postData.put("srchDetcd", "29");
+        postData.put("srchKey", "");
+        postData.put("srchWord", "");
+
+        String snuGCForTotalSize = Site.GC.getUrl();
+        Document GCDocForTotalSize = null;
         try {
-            rangeAndUnit = new HashMap<>();
-            String gcUrl = "http://www.gclabs.co.kr/testingInfo/testingItemOra_view?code=" + testKey;
-            Document doc = Jsoup.connect(gcUrl).get();
-            Elements rangeElements = doc.select("table.type3").eq(2).select("tbody tr td").eq(0);
-            String range = rangeElements.text();
-
-            rangeAndUnit.put("range", range);
-            rangeAndUnit.put("unit", range);
-
+            GCDocForTotalSize = Jsoup.connect(snuGCForTotalSize).data(postData).post();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new Exception();
         }
-        return rangeAndUnit;
+        Elements currentRow = GCDocForTotalSize.select("form#frmInfo table.board tbody tr");
+        int lastPageSize = currentRow.size();
+        int totalSize = (((Integer.parseInt(lastPage) - 1) * 10)) + lastPageSize;
+
+        return totalSize;
     }
 
+
+    private Map<String, String> getGCRangeAndUnit(String testKey) throws Exception {
+
+        Map<String, String> rangeAndUnit = new HashMap<>();
+
+        String gcUrl = String.format(Site.GC_detail.getUrl(), testKey);
+
+        Document doc = null;
+
+        try {
+            doc = Jsoup.connect(gcUrl).get();
+        } catch (IOException e) {
+            throw new Exception();
+        }
+
+        Elements rangeElements = doc.select("table.type3").eq(2).select("tbody tr td").eq(0);
+        String range = rangeElements.text();
+
+        rangeAndUnit.put("range", range);
+        rangeAndUnit.put("unit", range);
+
+        return rangeAndUnit;
+    }
 }

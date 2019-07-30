@@ -12,7 +12,7 @@ import java.util.List;
 public interface CrawlerService {
 
     List<CrawlerDataModel> getSNULabData(Integer pageNo) throws Exception;
-    List<CrawlerDataModel> getSAHLabData();
-    List<CrawlerDataModel> getGCLabData();
+    List<CrawlerDataModel> getSAHLabData(Integer pageNo) throws Exception ;
+    List<CrawlerDataModel> getGCLabData(Integer pageNo) throws Exception;
 
 }

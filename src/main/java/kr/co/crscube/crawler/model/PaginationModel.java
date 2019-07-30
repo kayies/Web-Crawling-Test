@@ -113,7 +113,6 @@ public class PaginationModel {
         this.next = next;
     }
 
-    // 1 10 23`
     public void pageInfo(int page, int pageRange, int listCnt) {
 
         this.page = page;
