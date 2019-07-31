@@ -13,7 +13,7 @@
 <body>
 	<div class="search row" style="margin: 18px">
 		<div class="col-xs-2 col-sm-2">
-			<select id="moveSite" onchange="javascript:changeSite(this);"  class="form-control">
+			<select id="moveSite" onchange="javascript:changeSite(this);" class="form-control">
 				<option value="SNU" >서울대병원</option>
                 <option value="SAH" selected>서울아산병원</option>
                 <option value="GC">GC Labs</option>
