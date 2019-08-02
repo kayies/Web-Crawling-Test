@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 
 /**
@@ -81,15 +82,20 @@ public class CrawlerController {
         return "crawler/gc";
     }
 
-    /*
-    @RequestMapping(value = "/get-snu-json", method = RequestMethod.GET)
+    @GetMapping({"/get-snu-json","/get-snu-json/{pageNo}"})
     @ResponseBody
-    public List<CrawlerDataModel> getSNUjsonData(Model model) {
-        List<CrawlerDataModel> crawlerDataModelArrayList = crawlerService.getSNULabData();
+    public List<CrawlerDataModel> getSNUjsonData(@PathVariable(value = "pageNo", required = false) Integer pageNo) throws Exception {
 
-        return crawlerDataModelArrayList;
+        //int page = pageNo.isPresent() ? pageNo.get() : 1;
+
+        int page = Optional.ofNullable(pageNo).orElseGet(() -> 1);
+
+
+        List<CrawlerDataModel> dataList = crawlerService.getSNULabData(page);
+        return dataList;
     }
 
+    /*
     @RequestMapping(value = "/get-sah-json", method = RequestMethod.GET)
     @ResponseBody
     public List<CrawlerDataModel> getSAHjsonData(Model model) {
