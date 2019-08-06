@@ -90,7 +90,7 @@ public class CrawlerController {
 
         /*int page = Optional.ofNullable(pageNo).orElseGet(() -> 1);*/
         //test
-
+ 
         List<CrawlerDataModel> dataList = crawlerService.getSNULabData(1);
         return dataList;
     }
